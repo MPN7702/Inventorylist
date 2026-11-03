@@ -39,6 +39,7 @@ input{
 button{
     padding:10px 20px;
     margin-right:10px;
+    margin-bottom:10px;
     cursor:pointer;
     background:#0066cc;
     color:white;
@@ -81,7 +82,9 @@ Serial number"></textarea>
 
 <button onclick="generateJson()">Generera JSON</button>
 
-<button onclick="copyJson()">Kopiera JSON</button>
+<button onclick="copyJson()">Kopiera kod</button>
+
+<button onclick="clearData()">Rensa data</button>
 
 <div class="info" id="rowCount"></div>
 
@@ -169,7 +172,16 @@ function copyJson(){
 
     navigator.clipboard.writeText(output.value);
 
-    alert("JSON kopierad!");
+    alert("Kod kopierad!");
+}
+
+function clearData(){
+
+    document.getElementById("inputData").value = "";
+
+    document.getElementById("output").value = "";
+
+    document.getElementById("rowCount").innerHTML = "";
 }
 
 </script>
