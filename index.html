@@ -1,1 +1,178 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eManager Inventory Count Generator</title>
 
+<style>
+body{
+    font-family:Arial,Helvetica,sans-serif;
+    margin:20px;
+    background:#f4f4f4;
+}
+
+h1{
+    color:#003366;
+}
+
+.container{
+    background:white;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 0 10px rgba(0,0,0,.15);
+}
+
+textarea{
+    width:100%;
+    height:300px;
+    font-family:Consolas,monospace;
+    font-size:13px;
+}
+
+input{
+    width:100%;
+    padding:10px;
+    margin-bottom:10px;
+}
+
+button{
+    padding:10px 20px;
+    margin-right:10px;
+    cursor:pointer;
+    background:#0066cc;
+    color:white;
+    border:none;
+    border-radius:5px;
+}
+
+button:hover{
+    background:#0050a0;
+}
+
+#output{
+    height:400px;
+}
+
+.info{
+    margin-top:10px;
+    font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>eManager Inventory Count Generator</h1>
+
+<label>ReferenceName</label>
+<input type="text" id="referenceName" value="COUNT_20261103">
+
+<label>Klistra in data från Excel</label>
+
+<textarea id="inputData" placeholder="Klistra in kolumnerna:
+Item number
+Batch number
+Serial number"></textarea>
+
+<br><br>
+
+<button onclick="generateJson()">Generera JSON</button>
+
+<button onclick="copyJson()">Kopiera JSON</button>
+
+<div class="info" id="rowCount"></div>
+
+<br>
+
+<label>JSON</label>
+
+<textarea id="output"></textarea>
+
+</div>
+
+<script>
+
+function generateJson(){
+
+    const referenceName =
+        document.getElementById("referenceName").value.trim();
+
+    const text =
+        document.getElementById("inputData").value;
+
+    const lines =
+        text.split(/\r?\n/);
+
+    let inventoryLines=[];
+
+    for(let i=0;i<lines.length;i++){
+
+        let row = lines[i].trim();
+
+        if(!row)
+            continue;
+
+        let cols = row.split(/\t+/);
+
+        if(cols.length < 1)
+            continue;
+
+        let itemNumber = cols[0]?.trim();
+        let batchNumber = cols[1]?.trim();
+        let serialNumber = cols[2]?.trim();
+
+        if(!itemNumber)
+            continue;
+
+        if(itemNumber.toLowerCase().includes("item"))
+            continue;
+
+        let obj = {
+            ReferenceName: referenceName,
+            ExtProductId: itemNumber
+        };
+
+        if(batchNumber)
+            obj.BatchId = batchNumber;
+
+        if(serialNumber)
+            obj.StockReservationKey = serialNumber;
+
+        inventoryLines.push(obj);
+    }
+
+    let finalJson = {
+        ImportOperation:{
+            Lines:{
+                InventoryLine: inventoryLines
+            }
+        }
+    };
+
+    document.getElementById("output").value =
+        JSON.stringify(finalJson,null,2);
+
+    document.getElementById("rowCount").innerHTML =
+        "Antal inventeringsrader: " +
+        inventoryLines.length;
+}
+
+function copyJson(){
+
+    let output =
+        document.getElementById("output");
+
+    output.select();
+
+    navigator.clipboard.writeText(output.value);
+
+    alert("JSON kopierad!");
+}
+
+</script>
+
+</body>
+</html>
