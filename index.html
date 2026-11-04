@@ -58,22 +58,6 @@ button:hover{
     background:#0050a0;
 }
 
-.test-btn{
-    background:#198754;
-}
-
-.test-btn:hover{
-    background:#146c43;
-}
-
-.prod-btn{
-    background:#dc3545;
-}
-
-.prod-btn:hover{
-    background:#bb2d3b;
-}
-
 .info{
     margin-top:10px;
     font-weight:bold;
@@ -90,12 +74,9 @@ button:hover{
 <label>ReferenceName</label>
 <input type="text" id="referenceName" value="COUNT_20261103">
 
-<label>Klistra in data från Excel</label>
+<label>Klistra in Excel-data (Item number, Batch number, Serial number)</label>
 
-<textarea id="inputData" placeholder="Klistra in kolumnerna:
-Item number
-Batch number
-Serial number"></textarea>
+<textarea id="inputData"></textarea>
 
 <br><br>
 
@@ -104,10 +85,6 @@ Serial number"></textarea>
 <button onclick="copyJson()">Kopiera kod</button>
 
 <button onclick="clearData()">Rensa data</button>
-
-<button class="test-btn" onclick="downloadPowerShellTest()">PS TEST</button>
-
-<button class="prod-btn" onclick="downloadPowerShellProd()">PS PROD</button>
 
 <div class="info" id="rowCount"></div>
 
@@ -129,31 +106,36 @@ function generateJson(){
     const text =
         document.getElementById("inputData").value;
 
-    const lines =
+    const rows =
         text.split(/\r?\n/);
 
-    let inventoryLines=[];
+    let inventoryLines = [];
 
-    for(let i=0;i<lines.length;i++){
+    for(let i = 0; i < rows.length; i++){
 
-        let row = lines[i].trim();
+        let row = rows[i];
 
-        if(!row)
+        if(!row.trim())
             continue;
 
-        let cols = row.split(/\t+/);
+        const cols = row.split("\t");
 
-        let itemNumber = cols[0]?.trim();
-        let batchNumber = cols[1]?.trim();
-        let serialNumber = cols[2]?.trim();
+        const itemNumber =
+            (cols[0] || "").trim();
+
+        const batchNumber =
+            (cols[1] || "").trim();
+
+        const serialNumber =
+            (cols[2] || "").trim();
 
         if(!itemNumber)
             continue;
 
-        if(itemNumber.toLowerCase().includes("item"))
+        if(itemNumber.toLowerCase() === "item number")
             continue;
 
-        let obj = {
+        const obj = {
             ReferenceName: referenceName,
             ExtProductId: itemNumber
         };
@@ -176,7 +158,7 @@ function generateJson(){
     };
 
     document.getElementById("output").value =
-        JSON.stringify(finalJson,null,2);
+        JSON.stringify(finalJson, null, 2);
 
     document.getElementById("rowCount").innerHTML =
         "Antal inventeringsrader: " +
@@ -188,8 +170,6 @@ function copyJson(){
     const output =
         document.getElementById("output");
 
-    output.select();
-
     navigator.clipboard.writeText(output.value);
 
     alert("Kod kopierad!");
@@ -200,78 +180,6 @@ function clearData(){
     document.getElementById("inputData").value = "";
     document.getElementById("output").value = "";
     document.getElementById("rowCount").innerHTML = "";
-}
-
-function downloadPowerShell(url,fileName){
-
-    const jsonContent =
-        document.getElementById("output").value;
-
-    if(!jsonContent){
-        alert("Generera JSON först.");
-        return;
-    }
-
-    const script = `
-$username = Read-Host "eManager Username"
-
-$password = Read-Host "eManager Password" -AsSecureString
-
-$credential = New-Object System.Management.Automation.PSCredential($username,$password)
-
-$json = @'
-${jsonContent}
-'@
-
-Invoke-RestMethod \`
--Uri "${url}" \`
--Method POST \`
--ContentType "application/json" \`
--Credential $credential \`
--Body $json
-
-Write-Host ""
-Write-Host "Import skickad." -ForegroundColor Green
-
-Pause
-`;
-
-    const blob = new Blob(
-        [script],
-        {type:"text/plain"}
-    );
-
-    const link =
-        document.createElement("a");
-
-    link.href =
-        URL.createObjectURL(blob);
-
-    link.download =
-        fileName;
-
-    link.click();
-}
-
-function downloadPowerShellTest(){
-
-    downloadPowerShell(
-        "http://SETOSASP007/api/inventorycounts/import",
-        "InventoryCount_TEST.ps1"
-    );
-
-}
-
-function downloadPowerShellProd(){
-
-    if(!confirm("Skapa PowerShell för PRODUKTION?"))
-        return;
-
-    downloadPowerShell(
-        "http://SETOSASP006/api/inventorycounts/import",
-        "InventoryCount_PROD.ps1"
-    );
-
 }
 
 </script>
