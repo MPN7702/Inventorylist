@@ -84,6 +84,24 @@ button:hover{
     font-family:Consolas,monospace;
 }
 
+.postmanInfo{
+    margin:8px 0 10px 0;
+    padding:10px;
+    background:#f8f9fa;
+    border:1px solid #ddd;
+    border-radius:5px;
+    font-size:14px;
+}
+
+.postmanInfo a{
+    color:#0066cc;
+    text-decoration:none;
+}
+
+.postmanInfo a:hover{
+    text-decoration:underline;
+}
+
 </style>
 </head>
 
@@ -126,6 +144,14 @@ placeholder="Klistra in Excel-data här..."></textarea>
 <br>
 
 <label>JSON</label>
+
+<div class="postmanInfo">
+    Kopiera nedan kod och lägg in i appen Postman och skicka till:
+    <br><br>
+    <a href="http://SETOSASP006/api/inventorycounts/import" target="_blank">
+        http://SETOSASP006/api/inventorycounts/import
+    </a>
+</div>
 
 <textarea id="output"></textarea>
 
