@@ -6,6 +6,7 @@
 <title>eManager Inventory Count Generator</title>
 
 <style>
+
 body{
     font-family:Arial,Helvetica,sans-serif;
     margin:20px;
@@ -27,12 +28,14 @@ input{
     width:100%;
     padding:10px;
     margin-bottom:10px;
+    box-sizing:border-box;
 }
 
 textarea{
     width:100%;
     font-family:Consolas,monospace;
     font-size:13px;
+    box-sizing:border-box;
 }
 
 #inputData{
@@ -65,14 +68,22 @@ button:hover{
 
 .headerRow{
     display:grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns:250px 250px 250px;
     background:#efefef;
     border:1px solid #ccc;
-    padding:8px;
+    padding:8px 10px;
     font-weight:bold;
     margin-bottom:5px;
     font-family:Consolas,monospace;
 }
+
+.helpText{
+    font-size:12px;
+    color:#666;
+    margin-bottom:8px;
+    font-family:Consolas,monospace;
+}
+
 </style>
 </head>
 
@@ -93,11 +104,14 @@ button:hover{
     <div>Serial number</div>
 </div>
 
-<textarea id="inputData" placeholder="Item number	Batch number	Serial number
+<div class="helpText">
+Klistra in direkt från Excel. Kolumnerna måste vara:
+Item number | Batch number | Serial number
+</div>
 
-1010-1750		MBB02070C1001FC100
-2015-3630	4PO-091976-10	
-8600-5856"></textarea>
+<textarea
+id="inputData"
+placeholder="Klistra in Excel-data här..."></textarea>
 
 <br><br>
 
@@ -161,10 +175,10 @@ function generateJson(){
             ExtProductId: itemNumber
         };
 
-        if(batchNumber !== "")
+        if(batchNumber)
             obj.BatchId = batchNumber;
 
-        if(serialNumber !== "")
+        if(serialNumber)
             obj.StockReservationKey = serialNumber;
 
         inventoryLines.push(obj);
