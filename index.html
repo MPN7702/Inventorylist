@@ -78,15 +78,6 @@ button:hover{
     margin-top:10px;
     font-weight:bold;
 }
-
-#statusBox{
-    margin-top:15px;
-    padding:10px;
-    background:#f8f9fa;
-    border:1px solid #ddd;
-    border-radius:5px;
-    white-space:pre-wrap;
-}
 </style>
 </head>
 
@@ -114,9 +105,9 @@ Serial number"></textarea>
 
 <button onclick="clearData()">Rensa data</button>
 
-<button class="test-btn" onclick="sendToTest()">Skicka till TEST</button>
+<button class="test-btn" onclick="downloadPowerShellTest()">PS TEST</button>
 
-<button class="prod-btn" onclick="sendToProd()">Skicka till PROD</button>
+<button class="prod-btn" onclick="downloadPowerShellProd()">PS PROD</button>
 
 <div class="info" id="rowCount"></div>
 
@@ -125,8 +116,6 @@ Serial number"></textarea>
 <label>JSON</label>
 
 <textarea id="output"></textarea>
-
-<div id="statusBox">Status visas här...</div>
 
 </div>
 
@@ -154,9 +143,6 @@ function generateJson(){
 
         let cols = row.split(/\t+/);
 
-        if(cols.length < 1)
-            continue;
-
         let itemNumber = cols[0]?.trim();
         let batchNumber = cols[1]?.trim();
         let serialNumber = cols[2]?.trim();
@@ -181,7 +167,7 @@ function generateJson(){
         inventoryLines.push(obj);
     }
 
-    let finalJson = {
+    const finalJson = {
         ImportOperation:{
             Lines:{
                 InventoryLine: inventoryLines
@@ -199,7 +185,7 @@ function generateJson(){
 
 function copyJson(){
 
-    let output =
+    const output =
         document.getElementById("output");
 
     output.select();
@@ -214,87 +200,76 @@ function clearData(){
     document.getElementById("inputData").value = "";
     document.getElementById("output").value = "";
     document.getElementById("rowCount").innerHTML = "";
-    document.getElementById("statusBox").innerHTML =
-        "Status visas här...";
 }
 
-async function sendRequest(url){
+function downloadPowerShell(url,fileName){
 
-    const jsonText =
+    const jsonContent =
         document.getElementById("output").value;
 
-    if(!jsonText){
+    if(!jsonContent){
         alert("Generera JSON först.");
         return;
     }
 
-    const username =
-        prompt("eManager användarnamn:");
+    const script = `
+$username = Read-Host "eManager Username"
 
-    if(!username)
-        return;
+$password = Read-Host "eManager Password" -AsSecureString
 
-    const password =
-        prompt("eManager lösenord:");
+$credential = New-Object System.Management.Automation.PSCredential($username,$password)
 
-    if(!password)
-        return;
+$json = @'
+${jsonContent}
+'@
 
-    document.getElementById("statusBox").innerHTML =
-        "Skickar...";
+Invoke-RestMethod \`
+-Uri "${url}" \`
+-Method POST \`
+-ContentType "application/json" \`
+-Credential $credential \`
+-Body $json
 
-    try{
+Write-Host ""
+Write-Host "Import skickad." -ForegroundColor Green
 
-        const response = await fetch(url,{
-            method:"POST",
-            headers:{
-                "Content-Type":"application/json",
-                "Authorization":"Basic " +
-                    btoa(username + ":" + password)
-            },
-            body:jsonText
-        });
+Pause
+`;
 
-        const responseText =
-            await response.text();
+    const blob = new Blob(
+        [script],
+        {type:"text/plain"}
+    );
 
-        document.getElementById("statusBox").innerHTML =
-            "Status: " +
-            response.status +
-            "\n\n" +
-            responseText;
+    const link =
+        document.createElement("a");
 
-    }
-    catch(error){
+    link.href =
+        URL.createObjectURL(blob);
 
-        document.getElementById("statusBox").innerHTML =
-            "Fel:\n\n" +
-            error +
-            "\n\nOm detta är ett CORS-fel måste eManager servern tillåta anrop från GitHub Pages.";
+    link.download =
+        fileName;
 
-    }
+    link.click();
 }
 
-function sendToTest(){
+function downloadPowerShellTest(){
 
-    sendRequest(
-        "http://SETOSASP007/api/inventorycounts/import"
+    downloadPowerShell(
+        "http://SETOSASP007/api/inventorycounts/import",
+        "InventoryCount_TEST.ps1"
     );
 
 }
 
-function sendToProd(){
+function downloadPowerShellProd(){
 
-    const answer =
-        confirm(
-            "Är du säker på att du vill skicka till PRODUKTION?"
-        );
-
-    if(!answer)
+    if(!confirm("Skapa PowerShell för PRODUKTION?"))
         return;
 
-    sendRequest(
-        "http://SETOSASP006/api/inventorycounts/import"
+    downloadPowerShell(
+        "http://SETOSASP006/api/inventorycounts/import",
+        "InventoryCount_PROD.ps1"
     );
 
 }
