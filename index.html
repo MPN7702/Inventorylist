@@ -113,7 +113,7 @@ button:hover{
 <h1>eManager Inventory Count Generator</h1>
 
 <label>ReferenceName</label>
-<input type="text" id="referenceName" value="COUNT_20261103">
+<input type="text" id="referenceName">
 
 <label>Klistra in Excel-data</label>
 
@@ -158,7 +158,6 @@ http://SETOSASP006/api/inventorycounts/import
 
 <strong>Användarnamn:</strong> fourone
 <br>
-
 <strong>Lösenord:</strong> 2022Torsby100%
 
 </div>
@@ -168,6 +167,27 @@ http://SETOSASP006/api/inventorycounts/import
 </div>
 
 <script>
+
+window.onload = function(){
+
+    const today = new Date();
+
+    const year = today.getFullYear();
+
+    const month = String(
+        today.getMonth() + 1
+    ).padStart(2,"0");
+
+    const day = String(
+        today.getDate()
+    ).padStart(2,"0");
+
+    document.getElementById("referenceName").value =
+        "COUNT_" +
+        year +
+        month +
+        day;
+};
 
 function generateJson(){
 
