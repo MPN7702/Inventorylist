@@ -25,9 +25,16 @@ h1{
 
 textarea{
     width:100%;
-    height:300px;
     font-family:Consolas,monospace;
     font-size:13px;
+}
+
+#inputData{
+    height:300px;
+}
+
+#output{
+    height:400px;
 }
 
 input{
@@ -51,13 +58,34 @@ button:hover{
     background:#0050a0;
 }
 
-#output{
-    height:400px;
+.test-btn{
+    background:#198754;
+}
+
+.test-btn:hover{
+    background:#146c43;
+}
+
+.prod-btn{
+    background:#dc3545;
+}
+
+.prod-btn:hover{
+    background:#bb2d3b;
 }
 
 .info{
     margin-top:10px;
     font-weight:bold;
+}
+
+#statusBox{
+    margin-top:15px;
+    padding:10px;
+    background:#f8f9fa;
+    border:1px solid #ddd;
+    border-radius:5px;
+    white-space:pre-wrap;
 }
 </style>
 </head>
@@ -86,6 +114,10 @@ Serial number"></textarea>
 
 <button onclick="clearData()">Rensa data</button>
 
+<button class="test-btn" onclick="sendToTest()">Skicka till TEST</button>
+
+<button class="prod-btn" onclick="sendToProd()">Skicka till PROD</button>
+
 <div class="info" id="rowCount"></div>
 
 <br>
@@ -93,6 +125,8 @@ Serial number"></textarea>
 <label>JSON</label>
 
 <textarea id="output"></textarea>
+
+<div id="statusBox">Status visas här...</div>
 
 </div>
 
@@ -178,10 +212,91 @@ function copyJson(){
 function clearData(){
 
     document.getElementById("inputData").value = "";
-
     document.getElementById("output").value = "";
-
     document.getElementById("rowCount").innerHTML = "";
+    document.getElementById("statusBox").innerHTML =
+        "Status visas här...";
+}
+
+async function sendRequest(url){
+
+    const jsonText =
+        document.getElementById("output").value;
+
+    if(!jsonText){
+        alert("Generera JSON först.");
+        return;
+    }
+
+    const username =
+        prompt("eManager användarnamn:");
+
+    if(!username)
+        return;
+
+    const password =
+        prompt("eManager lösenord:");
+
+    if(!password)
+        return;
+
+    document.getElementById("statusBox").innerHTML =
+        "Skickar...";
+
+    try{
+
+        const response = await fetch(url,{
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json",
+                "Authorization":"Basic " +
+                    btoa(username + ":" + password)
+            },
+            body:jsonText
+        });
+
+        const responseText =
+            await response.text();
+
+        document.getElementById("statusBox").innerHTML =
+            "Status: " +
+            response.status +
+            "\n\n" +
+            responseText;
+
+    }
+    catch(error){
+
+        document.getElementById("statusBox").innerHTML =
+            "Fel:\n\n" +
+            error +
+            "\n\nOm detta är ett CORS-fel måste eManager servern tillåta anrop från GitHub Pages.";
+
+    }
+}
+
+function sendToTest(){
+
+    sendRequest(
+        "http://SETOSASP007/api/inventorycounts/import"
+    );
+
+}
+
+function sendToProd(){
+
+    const answer =
+        confirm(
+            "Är du säker på att du vill skicka till PRODUKTION?"
+        );
+
+    if(!answer)
+        return;
+
+    sendRequest(
+        "http://SETOSASP006/api/inventorycounts/import"
+    );
+
 }
 
 </script>
